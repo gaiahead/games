@@ -1,4 +1,4 @@
-# 🎮 GaiaHead Games
+# 🎮 Gaiahead Games
 
 HTML5 게임 모음집
 
