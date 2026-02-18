@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="ko"><head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Vega · Custom Designs</title>
+<style>
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;margin:24px;background:#0f1115;color:#e6edf3}
+a{color:#58a6ff;text-decoration:none} a:hover{text-decoration:underline}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:16px}
+.card{background:#161b22;border:1px solid #30363d;border-radius:10px;padding:12px;overflow:hidden;box-sizing:border-box}
+.name{font-size:14px;margin-bottom:8px;color:#9da7b3}
+.vis{width:100%;overflow:hidden}
+.vis canvas,.vis svg{max-width:100%!important;display:block}
+small{color:#8b949e}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/vega@6"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
+</head><body>
+<h1>Vega · Custom Designs</h1><p><a href="../index.html">← 전체 목록</a></p>
+<div class="grid">
+  <div class="card"><div class="name">budget-forecasts</div><div id="v_budget_forecasts" class="vis"></div></div>
+  <div class="card"><div class="name">wheat-and-wages</div><div id="v_wheat_and_wages" class="vis"></div></div>
+  <div class="card"><div class="name">falkensee-population</div><div id="v_falkensee_population" class="vis"></div></div>
+  <div class="card"><div class="name">annual-temperature</div><div id="v_annual_temperature" class="vis"></div></div>
+  <div class="card"><div class="name">weekly-temperature</div><div id="v_weekly_temperature" class="vis"></div></div>
+  <div class="card"><div class="name">flight-passengers</div><div id="v_flight_passengers" class="vis"></div></div>
+  <div class="card"><div class="name">timelines</div><div id="v_timelines" class="vis"></div></div>
+  <div class="card"><div class="name">u-district-cuisine</div><div id="v_u_district_cuisine" class="vis"></div></div>
+  <div class="card"><div class="name">clock</div><div id="v_clock" class="vis"></div></div>
+  <div class="card"><div class="name">watch</div><div id="v_watch" class="vis"></div></div>
+  <div class="card"><div class="name">warming-stripes</div><div id="v_warming_stripes" class="vis"></div></div>
+  <div class="card"><div class="name">earthquakes-globe</div><div id="v_earthquakes_globe" class="vis"></div></div>
+  <div class="card"><div class="name">serpentine-timeline</div><div id="v_serpentine_timeline" class="vis"></div></div>
+</div>
+<script>
+const examples = ["budget-forecasts", "wheat-and-wages", "falkensee-population", "annual-temperature", "weekly-temperature", "flight-passengers", "timelines", "u-district-cuisine", "clock", "watch", "warming-stripes", "earthquakes-globe", "serpentine-timeline"];
+
+const BASE = "https://vega.github.io/vega/examples/";
+const DATA_BASE = "https://vega.github.io/vega/data/";
+
+function fixDataUrls(spec) {
+  const walk = (node) => {
+    if (!node || typeof node !== "object") return;
+    if (Array.isArray(node)) { node.forEach(walk); return; }
+    if (node.url && typeof node.url === "string" && !/^https?:\/\//.test(node.url)) {
+      const u = node.url.replace(/^\//, "");
+      node.url = u.startsWith("data/") ? DATA_BASE + u.slice(5) : BASE + u;
+    }
+    Object.values(node).forEach(walk);
+  };
+  walk(spec);
+}
+
+function scaleSpec(spec, cardWidth) {
+  const origW = spec.width || 400;
+  const origH = spec.height || 320;
+  const scale = Math.min(1, (cardWidth - 24) / origW);
+  spec.width = Math.round(origW * scale);
+  spec.height = Math.round(origH * scale);
+}
+
+async function renderAll() {
+  for (const id of examples) {
+    const elId = "v_" + id.replace(/[^a-zA-Z0-9_]/g, "_");
+    const el = document.getElementById(elId);
+    if (!el) continue;
+    const url = BASE + id + ".vg.json";
+    try {
+      const spec = await fetch(url).then(r => r.json());
+      fixDataUrls(spec);
+      const container = el.closest(".card");
+      const cardWidth = container ? container.clientWidth : 420;
+      scaleSpec(spec, cardWidth);
+      await vegaEmbed(el, spec, { actions: true, renderer: "svg" });
+    } catch(e) {
+      el.innerHTML = `<pre style="color:#ff7b72;white-space:pre-wrap">render failed: ${e}</pre>`;
+    }
+  }
+}
+renderAll();
+</script>
+</body></html>

@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="ko"><head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Vega · Interaction Techniques</title>
+<style>
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;margin:24px;background:#0f1115;color:#e6edf3}
+a{color:#58a6ff;text-decoration:none} a:hover{text-decoration:underline}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:16px}
+.card{background:#161b22;border:1px solid #30363d;border-radius:10px;padding:12px;overflow:hidden;box-sizing:border-box}
+.name{font-size:14px;margin-bottom:8px;color:#9da7b3}
+.vis{width:100%;overflow:hidden}
+.vis canvas,.vis svg{max-width:100%!important;display:block}
+small{color:#8b949e}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/vega@6"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
+</head><body>
+<h1>Vega · Interaction Techniques</h1><p><a href="../index.html">← 전체 목록</a></p>
+<div class="grid">
+  <div class="card"><div class="name">crossfilter-flights</div><div id="v_crossfilter_flights" class="vis"></div></div>
+  <div class="card"><div class="name">overview-plus-detail</div><div id="v_overview_plus_detail" class="vis"></div></div>
+  <div class="card"><div class="name">brushing-scatter-plots</div><div id="v_brushing_scatter_plots" class="vis"></div></div>
+  <div class="card"><div class="name">zoomable-scatter-plot</div><div id="v_zoomable_scatter_plot" class="vis"></div></div>
+  <div class="card"><div class="name">zoomable-binned-plot</div><div id="v_zoomable_binned_plot" class="vis"></div></div>
+  <div class="card"><div class="name">global-development</div><div id="v_global_development" class="vis"></div></div>
+  <div class="card"><div class="name">interactive-legend</div><div id="v_interactive_legend" class="vis"></div></div>
+  <div class="card"><div class="name">stock-index-chart</div><div id="v_stock_index_chart" class="vis"></div></div>
+  <div class="card"><div class="name">pi-monte-carlo</div><div id="v_pi_monte_carlo" class="vis"></div></div>
+  <div class="card"><div class="name">zoomable-circle-packing</div><div id="v_zoomable_circle_packing" class="vis"></div></div>
+  <div class="card"><div class="name">table-scrollbar</div><div id="v_table_scrollbar" class="vis"></div></div>
+  <div class="card"><div class="name">bar-line-toggle</div><div id="v_bar_line_toggle" class="vis"></div></div>
+  <div class="card"><div class="name">map-with-tooltip</div><div id="v_map_with_tooltip" class="vis"></div></div>
+  <div class="card"><div class="name">pacman</div><div id="v_pacman" class="vis"></div></div>
+  <div class="card"><div class="name">platformer</div><div id="v_platformer" class="vis"></div></div>
+</div>
+<script>
+const examples = ["crossfilter-flights", "overview-plus-detail", "brushing-scatter-plots", "zoomable-scatter-plot", "zoomable-binned-plot", "global-development", "interactive-legend", "stock-index-chart", "pi-monte-carlo", "zoomable-circle-packing", "table-scrollbar", "bar-line-toggle", "map-with-tooltip", "pacman", "platformer"];
+
+const BASE = "https://vega.github.io/vega/examples/";
+const DATA_BASE = "https://vega.github.io/vega/data/";
+
+function fixDataUrls(spec) {
+  const walk = (node) => {
+    if (!node || typeof node !== "object") return;
+    if (Array.isArray(node)) { node.forEach(walk); return; }
+    if (node.url && typeof node.url === "string" && !/^https?:\/\//.test(node.url)) {
+      const u = node.url.replace(/^\//, "");
+      node.url = u.startsWith("data/") ? DATA_BASE + u.slice(5) : BASE + u;
+    }
+    Object.values(node).forEach(walk);
+  };
+  walk(spec);
+}
+
+function scaleSpec(spec, cardWidth) {
+  const origW = spec.width || 400;
+  const origH = spec.height || 320;
+  const scale = Math.min(1, (cardWidth - 24) / origW);
+  spec.width = Math.round(origW * scale);
+  spec.height = Math.round(origH * scale);
+}
+
+async function renderAll() {
+  for (const id of examples) {
+    const elId = "v_" + id.replace(/[^a-zA-Z0-9_]/g, "_");
+    const el = document.getElementById(elId);
+    if (!el) continue;
+    const url = BASE + id + ".vg.json";
+    try {
+      const spec = await fetch(url).then(r => r.json());
+      fixDataUrls(spec);
+      const container = el.closest(".card");
+      const cardWidth = container ? container.clientWidth : 420;
+      scaleSpec(spec, cardWidth);
+      await vegaEmbed(el, spec, { actions: true, renderer: "svg" });
+    } catch(e) {
+      el.innerHTML = `<pre style="color:#ff7b72;white-space:pre-wrap">render failed: ${e}</pre>`;
+    }
+  }
+}
+renderAll();
+</script>
+</body></html>
